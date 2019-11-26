@@ -23,6 +23,8 @@ namespace Nancy.Swagger.Services
 
         private static IDictionary<string, SecuritySchemeBuilder> _securitySchemes = new Dictionary<string, SecuritySchemeBuilder>();
 
+        private static IDictionary<SecurityScheme, SecurityRequirementBuilder> _securityRequirements = new Dictionary<SecurityScheme, SecurityRequirementBuilder>();
+
         public static void SetInfo(string title, string version, string desc, Contact contact = null, string termsOfService = null)
         {
             _info = new Info()
@@ -50,10 +52,31 @@ namespace Nancy.Swagger.Services
             _securitySchemes.Add(name, builder);
         }
 
+        public static void AddSecurityRequirementBuilder(SecurityScheme securityScheme, SecurityRequirementBuilder builder)
+        {
+            if (_securityRequirements == null)
+            {
+                _securityRequirements = new Dictionary<SecurityScheme, SecurityRequirementBuilder>();
+            }
+
+            if (_securityRequirements.ContainsKey(securityScheme))
+            {
+                _securityRequirements.Remove(securityScheme);
+            }
+
+            _securityRequirements.Add(securityScheme, builder);
+        }
+
         public static void SetSecuritySchemeBuilder(SecuritySchemeBuilder builder, string name)
         {
             _securitySchemes = null;
             AddSecuritySchemeBuilder(builder, name);
+        }
+
+        public static void SetSecurityRequirementBuilder(SecurityScheme securityScheme, SecurityRequirementBuilder builder)
+        {
+            _securityRequirements = null;
+            AddSecurityRequirementBuilder(securityScheme, builder);
         }
 
         /// <summary>
@@ -133,6 +156,11 @@ namespace Nancy.Swagger.Services
             foreach (var securityScheme in _securitySchemes)
             {
                 builder.SecurityDefinition(securityScheme.Key, securityScheme.Value.Build());
+            }
+
+            foreach (var securityRequirement in _securityRequirements)
+            {
+                builder.SecurityRequirement(securityRequirement.Value);
             }
 
             return builder.Build();
